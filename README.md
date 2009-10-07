@@ -16,5 +16,10 @@ Wikipydia can:
 
 - fetch parsed markup (html)
 
+Install
+-------
+
+python ./setup.py install
+
 
 James Dennis <<jd@j2labs.net>>
