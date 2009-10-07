@@ -86,3 +86,17 @@ def query_text_rendered(page, language='en'):
     json = _run_query(query_args, language=language)
     html = json['parse']['text']['*']
     return html
+
+def fetch_rendered_article(title, title_lang, target_lang):
+    """
+    Takes a title and it's source language and fetches the article using
+    wikipedia's mapping of the title translated to the target language.
+    """
+    if title_lang == target_lang:
+        return query_text_rendered(title, language=title_lang)
+    else:
+        lang_links = query_language_links(title, title_lang)
+        if target_lang in lang_links:
+            return query_text_rendered(lang_links[target_lang], language=target_lang)
+        else:
+            return "Error :: target_lang:%s not supported"
