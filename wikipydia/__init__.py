@@ -15,7 +15,7 @@ import simplejson
 
 api_url = 'http://%s.wikipedia.org/w/api.php'
 
-def unicode_urlencode(params):
+def _unicode_urlencode(params):
         """
         A unicode aware version of urllib.urlencode.
         Borrowed from pyfacebook :: http://github.com/sciyoshi/pyfacebook/
@@ -30,7 +30,7 @@ def _run_query(args, language):
     takes arguments and optional language argument and runs query on server
     """
     url = api_url % (language)
-    data = unicode_urlencode(args)
+    data = _unicode_urlencode(args)
     search_results = urllib.urlopen(url, data=data)
     return simplejson.loads(search_results.read())
     
