@@ -99,4 +99,4 @@ def fetch_rendered_article(title, title_lang, target_lang):
         if target_lang in lang_links:
             return query_text_rendered(lang_links[target_lang], language=target_lang)
         else:
-            return "Error :: target_lang:%s not supported"
+            return "Error :: target_lang:%s not supported" % (target_lang)
