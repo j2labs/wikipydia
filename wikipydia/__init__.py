@@ -61,7 +61,7 @@ def query_language_links(titles, language='en'):
                      for l in json['query']['pages'][page_id]['langlinks']])
         
     
-def query_text_raw(titles, format='json', language='en'):
+def query_text_raw(titles, language='en'):
     """
     action=query
     Fetches the article in wikimarkup form
@@ -70,12 +70,12 @@ def query_text_raw(titles, format='json', language='en'):
                   'titles': titles,
                   'rvprop': 'content',
                   'prop': 'revisions',
-                  'format': format}
+                  'format': 'json'}
     json = _run_query(query_args, language=language)
     for page_id in json['query']['pages']:
         return json['query']['pages'][page_id]['revisions'][0]['*']
 
-def query_text_rendered(page, format='json', language='en'):
+def query_text_rendered(page, language='en'):
     """
     action=parse
     Fetches the article in parsed html form
