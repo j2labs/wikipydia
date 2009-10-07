@@ -25,7 +25,7 @@ def unicode_urlencode(params):
         return urllib.urlencode([(k, isinstance(v, unicode) and v.encode('utf-8') or v)
                                  for k, v in params])
 
-def _run_query(args, language='en'):
+def _run_query(args, language):
     """
     takes arguments and optional language argument and runs query on server
     """
@@ -42,7 +42,7 @@ def opensearch(query, language='en'):
     query_args = {'action': 'opensearch',
                   'search': query,
                   'format': 'json'}
-    return _run_query(query_args, language=language)
+    return _run_query(query_args, language)
     
 def query_language_links(titles, language='en'):
     """
@@ -54,7 +54,7 @@ def query_language_links(titles, language='en'):
                   'prop': 'langlinks',
                   'titles': titles,
                   'format': 'json'}
-    json = _run_query(query_args, language=language)
+    json = _run_query(query_args, language)
     # Totally weird to return on the first iteration of a for loop...
     for page_id in json['query']['pages']:
         return dict([(l['lang'],l['*'])
@@ -71,7 +71,7 @@ def query_text_raw(titles, language='en'):
                   'rvprop': 'content',
                   'prop': 'revisions',
                   'format': 'json'}
-    json = _run_query(query_args, language=language)
+    json = _run_query(query_args, language)
     for page_id in json['query']['pages']:
         return json['query']['pages'][page_id]['revisions'][0]['*']
 
@@ -83,7 +83,7 @@ def query_text_rendered(page, language='en'):
     query_args = {'action': 'parse',
                   'page': page,
                   'format': 'json'}
-    json = _run_query(query_args, language=language)
+    json = _run_query(query_args, language)
     html = json['parse']['text']['*']
     return html
 
