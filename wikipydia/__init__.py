@@ -15,30 +15,46 @@ import simplejson
 
 api_url = 'http://%s.wikipedia.org/w/api.php'
 
-def opensearch(query, format='json', language='en'):
+def unicode_urlencode(params):
+        """
+        A unicode aware version of urllib.urlencode.
+        Borrowed from pyfacebook :: http://github.com/sciyoshi/pyfacebook/
+        """
+        if isinstance(params, dict):
+            params = params.items()
+        return urllib.urlencode([(k, isinstance(v, unicode) and v.encode('utf-8') or v)
+                                 for k, v in params])
+
+def _run_query(args, language='en'):
+    """
+    takes arguments and optional language argument and runs query on server
+    """
+    url = api_url % (language)
+    data = unicode_urlencode(args)
+    search_results = urllib.urlopen(url, data=data)
+    return simplejson.loads(search_results.read())
+    
+
+def opensearch(query, language='en'):
     """
     action=opensearch
     """
-    url = api_url % (language)
-    query_args = urllib.urlencode({'action' : 'opensearch',
-                                   'search': query,
-                                   'format': format})
-    search_results = urllib.urlopen(url, data=query_args)
-    json = simplejson.loads(search_results.read())
-    return json
+    query_args = {'action': 'opensearch',
+                  'search': query,
+                  'format': 'json'}
+    return _run_query(query_args, language=language)
     
-def query_language_links(titles, format='json', language='en'):
+def query_language_links(titles, language='en'):
     """
     action=query,prop=langlinks
     Accepts a titles argument, but appears to actually expect singular title
     """       
     url = api_url % (language)
-    query_args = urllib.urlencode({'action': 'query',
-                                   'prop': 'langlinks',
-                                   'titles': titles,
-                                   'format': format})
-    search_results = urllib.urlopen(url, data=query_args)
-    json = simplejson.loads(search_results.read())
+    query_args = {'action': 'query',
+                  'prop': 'langlinks',
+                  'titles': titles,
+                  'format': 'json'}
+    json = _run_query(query_args, language=language)
     # Totally weird to return on the first iteration of a for loop...
     for page_id in json['query']['pages']:
         return dict([(l['lang'],l['*'])
@@ -50,15 +66,12 @@ def query_text_raw(titles, format='json', language='en'):
     action=query
     Fetches the article in wikimarkup form
     """
-    url = api_url % (language)
-    query_args = urllib.urlencode({'action': 'query',
-                                   'titles': titles,
-                                   'rvprop': 'content',
-                                   'prop': 'revisions',
-                                   'format': format})
-    search_results = urllib.urlopen(url, data=query_args)
-    json = simplejson.loads(search_results.read())
-    # Totally weird to return on the first iteration of a for loop...
+    query_args = {'action': 'query',
+                  'titles': titles,
+                  'rvprop': 'content',
+                  'prop': 'revisions',
+                  'format': format}
+    json = _run_query(query_args, language=language)
     for page_id in json['query']['pages']:
         return json['query']['pages'][page_id]['revisions'][0]['*']
 
@@ -67,12 +80,9 @@ def query_text_rendered(page, format='json', language='en'):
     action=parse
     Fetches the article in parsed html form
     """
-    url = api_url % (language)
-    query_args = urllib.urlencode({'action': 'parse',
-                              #'page': 'Dennis',
-                              'page': page,
-                              'format': 'json'})
-    search_results = urllib.urlopen(url, data=query_args)
-    json = simplejson.loads(search_results.read())
+    query_args = {'action': 'parse',
+                  'page': page,
+                  'format': 'json'}
+    json = _run_query(query_args, language=language)
     html = json['parse']['text']['*']
     return html
