@@ -3,6 +3,9 @@ Wikipydia
 
 Wikipydia is a Python library for interfacing with Wikipedia's API.
 
+Wikipydia is licensed under the Apache Licence, Version 2.0, available
+here :: http://www.apache.org/licenses/LICENSE-2.0.html
+
 Features
 --------
 
