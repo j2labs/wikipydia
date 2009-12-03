@@ -60,10 +60,10 @@ def query_language_links(titles, language='en'):
     }
     json = _run_query(query_args, language)
     # Totally weird to return on the first iteration of a for loop...
+    print json
     for page_id in json['query']['pages']:
         return dict([(l['lang'],l['*'])
                      for l in json['query']['pages'][page_id]['langlinks']])
-        
     
 def query_text_raw(titles, language='en'):
     """
@@ -75,7 +75,8 @@ def query_text_raw(titles, language='en'):
         'titles': titles,
         'rvprop': 'content',
         'prop': 'info|revisions',
-        'format': 'json'
+        'format': 'json',
+        'redirects': ''
     }
     json = _run_query(query_args, language)
     for page_id in json['query']['pages']:
@@ -93,7 +94,8 @@ def query_text_rendered(page, language='en'):
     query_args = {
         'action': 'parse',
         'page': page,
-        'format': 'json'
+        'format': 'json',
+        'redirects': ''
     }
     json = _run_query(query_args, language)
     response = {
@@ -102,16 +104,14 @@ def query_text_rendered(page, language='en'):
     }
     return response
 
-def fetch_rendered_article(title, title_lang, target_lang):
+def query_rendered_altlang(title, title_lang, target_lang):
     """
-    Takes a title and it's source language and fetches the article using
-    wikipedia's mapping of the title translated to the target language.
+    Takes a title and the language the title is in, asks wikipedia for
+    alternative language offerings and fetches the article hosted by
+    wikipedia in the target language.
     """
-    if title_lang == target_lang:
-        return query_text_rendered(title, language=title_lang)
+    lang_links = query_language_links(title, title_lang)
+    if target_lang in lang_links:
+        return query_text_rendered(lang_links[target_lang], language=title_lang)
     else:
-        lang_links = query_language_links(title, title_lang)
-        if target_lang in lang_links:
-            return query_text_rendered(lang_links[target_lang], language=target_lang)
-        else:
-            return ''
+        return ValueError('Language not supported')
