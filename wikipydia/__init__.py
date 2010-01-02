@@ -46,7 +46,7 @@ def opensearch(query, language='en'):
     }
     return _run_query(query_args, language)
     
-def query_language_links(titles, language='en'):
+def query_language_links(titles, language='en', lllimit=10):
     """
     action=query,prop=langlinks
     Accepts a titles argument, but appears to actually expect singular title
@@ -56,11 +56,11 @@ def query_language_links(titles, language='en'):
         'action': 'query',
         'prop': 'langlinks',
         'titles': titles,
-        'format': 'json'
+        'format': 'json',
+        'lllimit': lllimit
     }
     json = _run_query(query_args, language)
     # Totally weird to return on the first iteration of a for loop...
-    print json
     for page_id in json['query']['pages']:
         return dict([(l['lang'],l['*'])
                      for l in json['query']['pages'][page_id]['langlinks']])

@@ -3,7 +3,7 @@
 from distutils.core import setup
  
 setup(name='wikipydia',
-      version='0.1.1',
+      version='0.1.2',
       description='Python Client Library for the Wikipedia API',
       author='James Dennis',
       author_email='jd@j2labs.net',
