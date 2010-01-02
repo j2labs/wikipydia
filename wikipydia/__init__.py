@@ -60,6 +60,7 @@ def query_language_links(titles, language='en', lllimit=10):
         'lllimit': lllimit
     }
     json = _run_query(query_args, language)
+    print 'JSON :: %s' % json
     # Totally weird to return on the first iteration of a for loop...
     for page_id in json['query']['pages']:
         return dict([(l['lang'],l['*'])
@@ -110,8 +111,8 @@ def query_rendered_altlang(title, title_lang, target_lang):
     alternative language offerings and fetches the article hosted by
     wikipedia in the target language.
     """
-    lang_links = query_language_links(title, title_lang)
+    lang_links = query_language_links(title, title_lang, lllimit=100)
     if target_lang in lang_links:
-        return query_text_rendered(lang_links[target_lang], language=title_lang)
+        return query_text_rendered(lang_links[target_lang], language=target_lang)
     else:
         return ValueError('Language not supported')
