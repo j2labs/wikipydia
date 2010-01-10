@@ -1,0 +1,8 @@
+.DS_Store
+dev.db
+*.pyc
+*.*~
+local_settings.py*
+MANIFEST
+build
+dist
