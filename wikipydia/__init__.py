@@ -87,6 +87,58 @@ def query_language_links(title, language='en', lllimit=10):
        lang_links = dict([(ll['lang'],ll['*']) for ll in json['query']['pages'][page_id]['langlinks']])
    return lang_links
 
+def query_categories(title, language='en'):
+   """
+   action=query,prop=categories
+   Returns a full list of categories for the title
+   """
+   url = api_url % (language)
+   query_args = {
+       'action': 'query',
+       'prop': 'categories',
+       'titles': title,
+       'format': 'json',
+   }
+   categories = []
+   while True:
+      json = _run_query(query_args, language)
+      for page_id in json['query']['pages']:
+          if 'categories' in json['query']['pages'][page_id].keys():
+              for category in json['query']['pages'][page_id]['categories']:
+                  print category['title']
+                  categories.append(category['title'])
+      if 'query-continue' in json:
+          continue_item = json['query-continue']['categories']['clcontinue']
+          query_args['clcontinue'] = continue_item
+      else:
+          break
+   return categories
+
+
+def query_category_members(category, language='en', limit=100):
+   """
+   action=query,prop=categories
+   Returns all the members of a category up to the specified limit
+   """
+   url = api_url % (language)
+   query_args = {
+       'action': 'query',
+       'list': 'categorymembers',
+       'cmtitle': category,
+       'format': 'json',
+       'cmlimit':limit
+   }
+   members = []
+   while True:
+      json = _run_query(query_args, language)
+      for member in json['query']['categorymembers']:
+          members.append(member['title'])
+      if 'query-continue' in json:
+          continue_item = json['query-continue']['categorymembers']['cmcontinue']
+          query_args['cmcontinue'] = continue_item
+      else:
+          break
+   return members
 
 
 def query_text_raw(title, language='en'):
