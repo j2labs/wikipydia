@@ -46,50 +46,57 @@ def opensearch(query, language='en'):
     }
     return _run_query(query_args, language)
 
-def unnormalize_titles(titles, query_results):
+
+def get_page_id(title, query_results):
    """
-   Creates a map of  normalized titles from the query results
-   back onto the titles that the user submitted
+   Extracts the title's pageid from the query results.
+   Assumes queries of the form query:pages:id, 
+   and properly handle the normalized method.
+   Returns -1 if it cannot find the page id
    """
-   unnormalized_titles = dict([(t, t) for t in titles])
    if 'normalized' in query_results['query'].keys():
        for normalized in query_results['query']['normalized']:
-           unnormalized_titles[normalized['to']] = normalized['from']
-   return unnormalized_titles
+           if title == normalized['from']:
+              title = normalized['to']
+              break
 
-def query_language_links(titles, language='en', lllimit=10):
+   for page in query_results['query']['pages']:
+       if title == query_results['query']['pages'][page]['title']:
+          return query_results['query']['pages'][page]['pageid']
+   return -1
+
+
+def query_language_links(title, language='en', lllimit=10):
    """
    action=query,prop=langlinks
-   Accepts a list of titles and returns a map for each title
-   that has an inter-language link, containing the lang abbreviation
+   returns a dict of inter-language links, containing the lang abbreviation
    and the corresponding title in that language
    """
    url = api_url % (language)
    query_args = {
        'action': 'query',
        'prop': 'langlinks',
-       'titles': '|'.join(titles),
+       'titles': title,
        'format': 'json',
        'lllimit': lllimit
    }
    json = _run_query(query_args, language)
-   titles_map = unnormalize_titles(titles, json)
-   results = {}
-   for page_id in json['query']['pages']:
-       title = titles_map[json['query']['pages'][page_id]['title']]
-       if 'langlinks' in json['query']['pages'][page_id].keys():
-           lang_map = dict([(ll['lang'],ll['*']) for ll in json['query']['pages'][page_id]['langlinks']])
-           results[title] = lang_map
-   return results
-    
-def query_text_raw(titles, language='en'):
+   page_id = get_page_id(title, json)
+   lang_links = {}
+   if 'langlinks' in json['query']['pages'][page_id].keys():
+       lang_links = dict([(ll['lang'],ll['*']) for ll in json['query']['pages'][page_id]['langlinks']])
+   return lang_links
+
+
+
+def query_text_raw(title, language='en'):
     """
     action=query
     Fetches the article in wikimarkup form
     """
     query_args = {
         'action': 'query',
-        'titles': titles,
+        'titles': title,
         'rvprop': 'content',
         'prop': 'info|revisions',
         'format': 'json',
