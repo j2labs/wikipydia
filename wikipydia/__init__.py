@@ -13,6 +13,9 @@ jd@j2labs.net
 import urllib
 import simplejson
 
+import calendar
+import datetime
+
 api_url = 'http://%s.wikipedia.org/w/api.php'
 
 def _unicode_urlencode(params):
@@ -34,6 +37,28 @@ def _run_query(args, language):
     search_results = urllib.urlopen(url, data=data)
     json = simplejson.loads(search_results.read())
     return json
+
+def _run_stats_query(language, title):
+    """
+    Queries stats.grok.se for the daily page views for a page
+    """
+    stats_api_url = 'http://stats.grok.se/json/%s/%s/%s'
+    today = date.today()
+    query_date = datetime.date(2007, 01, 01)
+    total_views = 0
+    stats = {}
+    stats['monthly_views'] = {}
+    while(query_date < today):
+        query_date_str = query_date.strftime("%Y%m")
+        url = stats_api_url % (language, query_date_str, urllib.quote(title))
+        search_results = urllib.urlopen(url)
+        json = simplejson.loads(search_results.read())
+        total_views += json['total_views']
+        stats['monthly_views'][query_date_str] = json
+        days_in_month = calendar.monthrange(query_date.year, query_date.month)[1]
+        query_date = query_date + datetime.timedelta(days_in_month)        
+    stats['total_views'] = total_views
+    return stats
 
 def opensearch(query, language='en'):
     """
