@@ -38,17 +38,18 @@ def _run_query(args, language):
     json = simplejson.loads(search_results.read())
     return json
 
-def _run_stats_query(language, title):
+def query_page_view_stats(title, language='en', start_date=(date.today()-datetime.timedelta(1)), end_date=date.today()):
     """
-    Queries stats.grok.se for the daily page views for a page
+    Queries stats.grok.se for the daily page views for wikipedia articles
     """
     stats_api_url = 'http://stats.grok.se/json/%s/%s/%s'
-    today = date.today()
-    query_date = datetime.date(2007, 01, 01)
+    earliest_date = datetime.date(2007, 01, 01)
+    query_date = max(start_date, earliest_date)
+    end_date = min(end_date, date.today())
     total_views = 0
     stats = {}
     stats['monthly_views'] = {}
-    while(query_date < today):
+    while(query_date < end_date):
         query_date_str = query_date.strftime("%Y%m")
         url = stats_api_url % (language, query_date_str, urllib.quote(title))
         search_results = urllib.urlopen(url)
