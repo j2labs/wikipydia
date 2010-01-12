@@ -51,7 +51,7 @@ def query_page_view_stats(title, language='en', start_date=(date.today()-datetim
     stats['monthly_views'] = {}
     while(query_date < end_date):
         query_date_str = query_date.strftime("%Y%m")
-        url = stats_api_url % (language, query_date_str, urllib.quote(title))
+        url = stats_api_url % (language, query_date_str, urllib.quote(title.encode('utf-8')))
         search_results = urllib.urlopen(url)
         json = simplejson.loads(search_results.read())
         total_views += json['total_views']
