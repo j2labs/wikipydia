@@ -16,6 +16,8 @@ import simplejson
 import calendar
 import datetime
 
+import re
+
 api_url = 'http://%s.wikipedia.org/w/api.php'
 
 def _unicode_urlencode(params):
@@ -38,14 +40,14 @@ def _run_query(args, language):
     json = simplejson.loads(search_results.read())
     return json
 
-def query_page_view_stats(title, language='en', start_date=(date.today()-datetime.timedelta(1)), end_date=date.today()):
+def query_page_view_stats(title, language='en', start_date=(datetime.date.today()-datetime.timedelta(1)), end_date=datetime.date.today()):
     """
     Queries stats.grok.se for the daily page views for wikipedia articles
     """
     stats_api_url = 'http://stats.grok.se/json/%s/%s/%s'
     earliest_date = datetime.date(2007, 01, 01)
     query_date = max(start_date, earliest_date)
-    end_date = min(end_date, date.today())
+    end_date = min(end_date, datetime.date.today())
     total_views = 0
     stats = {}
     stats['monthly_views'] = {}
@@ -131,7 +133,6 @@ def query_categories(title, language='en'):
       for page_id in json['query']['pages']:
           if 'categories' in json['query']['pages'][page_id].keys():
               for category in json['query']['pages'][page_id]['categories']:
-                  print category['title']
                   categories.append(category['title'])
       if 'query-continue' in json:
           continue_item = json['query-continue']['categories']['clcontinue']
@@ -152,19 +153,19 @@ def query_category_members(category, language='en', limit=100):
        'list': 'categorymembers',
        'cmtitle': category,
        'format': 'json',
-       'cmlimit':limit
+       'cmlimit': min(limit, 500)
    }
    members = []
    while True:
       json = _run_query(query_args, language)
       for member in json['query']['categorymembers']:
           members.append(member['title'])
-      if 'query-continue' in json:
+      if 'query-continue' in json and len(members) <= limit:
           continue_item = json['query-continue']['categorymembers']['cmcontinue']
           query_args['cmcontinue'] = continue_item
       else:
           break
-   return members
+   return members[0:limit]
 
 
 def query_text_raw(title, language='en'):
@@ -217,3 +218,43 @@ def query_rendered_altlang(title, title_lang, target_lang):
         return query_text_rendered(lang_links[target_lang], language=target_lang)
     else:
         return ValueError('Language not supported')
+
+
+def get_sections(wikified_text):
+    """
+    Parses the wikipedia markup for a page and returns
+    two arrays, one containing section headers and one
+    containing the (marked up) text of the section.
+    """
+    title_pattern = re.compile('==.*?==')
+    iterator = title_pattern.finditer(wikified_text)
+    headers = []
+    contents = []
+    header = ''
+    content_start = 0
+    for match in iterator:
+        headers.append(header)
+        content = wikified_text[content_start:match.start()]
+        contents.append(content)
+        header = wikified_text[match.start()+2:match.end()-2]
+        content_start = match.end()
+    headers.append(header)
+    content = wikified_text[content_start:len(wikified_text)-1]
+    contents.append(content)
+    return dict([('headers', headers), ('contents', contents)])
+
+
+
+def get_links(wikified_text):
+    """
+    Parses the wikipedia markup for a page and returns
+    a dict of rendered link text onto underlying wiki links
+    """
+    link_pattern = re.compile('\[\[.*?\]\]')
+    linked_text = {}
+    iterator = link_pattern.finditer(wikified_text)
+    for match in iterator:
+        link = wikified_text[match.start()+2:match.end()-2].split('|', 1)
+        linked_text[link[-1]] = link[0]
+    return linked_text
+
